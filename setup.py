@@ -11,11 +11,11 @@ setuptools.setup(
     description="A lossless image compressor which is based on a mixed integer linear program.",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/FGlazov/MILP_ImageCompressor",
+    url="https://github.com/FGlazov/milp-image",
     packages=setuptools.find_packages(),
     classifiers=[
         "Programming Language :: Python :: 3",
-        "License :: OSI Approved :: GPL-2.0 License",
+        "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
     ],
 )
