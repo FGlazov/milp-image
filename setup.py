@@ -22,5 +22,6 @@ setuptools.setup(
         'opencv-python',
         'py_rans',
         'pip',
+        'mip',
     ],
 )
