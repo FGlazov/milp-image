@@ -17,8 +17,8 @@ def create_model_for_image(img):
         upper_bound = 64
         lower_bound = -63
         if i == 0:
-            upper_bound = 255
-            lower_bound = -255
+            upper_bound = 127
+            lower_bound = -128
 
         vars_shape = (round(cols / (2 ** i)), round(rows / (2 ** i)))
 
@@ -57,7 +57,8 @@ def create_model_for_image(img):
                 y_square = y // (2 ** i)
                 variables_xy.append(square_variables[i][x_square][y_square])
 
-            m.add_constr(sum(variables_xy) == img[x][y])
+            # Center image values around -128 to 127. 
+            m.add_constr(sum(variables_xy) == img[x][y] - 128)
 
             continue
 
