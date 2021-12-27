@@ -16,4 +16,4 @@ def compress_image(path_to_image):
 ## TODO : Remove testing code.
 
 print(glob.glob("../../*"))
-print(compress_image("/home/fedor/lena_gray.png"))
+print(compress_image("/home/fedor/lena_small.png"))
