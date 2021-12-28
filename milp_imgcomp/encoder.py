@@ -4,9 +4,11 @@ import numpy as np
 def encode_to_file(levels, output_file):
     ransCoder = rANS.Encoder()
     
+    pdfs = []
     first_level = True
     for level in levels:
-        encode_level(ransCoder, level, first_level)
+        pdf = encode_level(ransCoder, level, first_level)
+        pdfs.append(pdf)
         first_level = False
 
     encoded = ransCoder.get_encoded()
@@ -20,11 +22,10 @@ def encode_level(ransCoder, level, first_level):
 
     square_values = np.array([var.x + offset for var in level.flatten()], dtype=np.int16)
 
-    print(square_values)
-
     # TODO: Test this using a mixture of a discritized gaussian + other prob instead.
     # This mixture could reduce model size from ~1KB per level to ~8 bytes instead probably without much loss in accuracy.
-    pdf = np.bincount(square_values, minlength=256 if first_level else 128)
+    bins = np.bincount(square_values, minlength=256 if first_level else 128)
+    pdf = bins.astype(np.float32) / float(len(square_values))
 
     for square_value in square_values:
         ransCoder.encode_symbol(pdf, square_value)
