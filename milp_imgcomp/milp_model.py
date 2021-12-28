@@ -11,7 +11,6 @@ def create_model_for_image(img):
 
     square_variables = []
     abs_value_variables = []
-    # TODO: Populate a feasible_solution = []. Format seems to be a list of tuples as (VAR, VALUE).
 
     for i in range(0, nr_square_levels):
         upper_bound = 64
@@ -25,7 +24,7 @@ def create_model_for_image(img):
         # Variables which represent squares on level i
         square_variables.append(m.add_var_tensor(
             vars_shape,
-            name=str(i),
+            name=str(i) + "_level",
             var_type=INTEGER,
             ub=upper_bound,
             lb=lower_bound
@@ -46,8 +45,10 @@ def create_model_for_image(img):
     for i in range(0, nr_square_levels):
         for square_var, abs_helper in zip(square_variables[i].flatten(), abs_value_variables[i].flatten()):
             m += square_var <= abs_helper
-            m += square_var >= -abs_helper
+            m += -square_var <= abs_helper
 
+    # TODO: Initial solution is not accepted due to mismatch of column names - seems to be a bug with mip?
+    initial_solution = []
     # Constraints which force the squares to be an encoding of the image.
     for x in range(0, cols):
         for y in range(0, rows):
@@ -60,6 +61,12 @@ def create_model_for_image(img):
             # Center image values around -128 to 127. 
             m.add_constr(sum(variables_xy) == img[x][y] - 128)
 
-            continue
+            # Trivial solution where lowest level == image and higher levels are 0.
+            initial_solution.append((square_variables[0][x][y], float(img[x][y]) - 128.0))
+
+    # TODO: Try using heuristic to "pull up" averages for better initial solution. Could make the solver quicker.        
+    m.start = initial_solution
+    print(m.start)
+    m.validate_mip_start()
 
     return m
