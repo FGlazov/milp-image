@@ -9,7 +9,7 @@ def compress_image(path_to_image):
         return False
 
     model = milp_model.create_model_for_image(img)
-
+    model.optimize()
     return True
 
 
