@@ -66,7 +66,6 @@ def create_model_for_image(img):
 
     # TODO: Try using heuristic to "pull up" averages for better initial solution. Could make the solver quicker.        
     m.start = initial_solution
-    print(m.start)
-    m.validate_mip_start()
 
-    return m
+
+    return m, square_variables

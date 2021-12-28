@@ -1,14 +1,17 @@
 import cv2
 import glob
+
+import encoder
 import milp_model
 
-
-def compress_image(path_to_image):
+def compress_image(path_to_image, output_file = 'out.mipi'):
     img = cv2.imread(path_to_image, cv2.IMREAD_GRAYSCALE)
     if img is None:
         return False
 
-    model = milp_model.create_model_for_image(img)
+    model, levels = milp_model.create_model_for_image(img)
+    model.optimize()
+    encoder.encode_to_file(levels, output_file)
 
     return True
 
