@@ -13,8 +13,8 @@ def create_model_for_image(img):
     abs_value_variables = []
 
     for i in range(0, nr_square_levels):
-        upper_bound = 64
-        lower_bound = -63
+        upper_bound = 63
+        lower_bound = -64
         if i == 0:
             upper_bound = 127
             lower_bound = -128
