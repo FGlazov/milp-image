@@ -24,6 +24,8 @@ setuptools.setup(
         'py_rans',
         'pip',
         'mip',
-        'numpy'
+        'numpy',
+        'scipy',
+        'sklearn'
     ],
 )
