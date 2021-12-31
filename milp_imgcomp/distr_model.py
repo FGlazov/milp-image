@@ -17,7 +17,7 @@ EXACT_PDF_TOP_LVL_PAYLOAD_SIZE = 4 * 2 * TOP_LEVEL_N
 
 # In bytes
 # 5 float32s - one for the 2 weights, 2 for the means, 2 for the variances.
-APPROX_PDF_PAYLOAD_SIZE = 5 * 4
+APPROX_PDF_PAYLOAD_SIZE = 4 * 5
 
 # TODO: Update this
 # Currently the model assumes that the underlying distribution is a mixture of two Gaussians
@@ -40,7 +40,6 @@ def create_gm(lvl):
     return gm
 
 def gm_pdf(gm, X):
-    #return sum([gm.weights_[i] * norm(gm.means_[i], np.sqrt(gm.covariances_[i])).pdf(X) for i in range(0, gm.n_components)])
     return model_pdf(gm.weights_, gm.means_, gm.covariances_, X)
 
 def model_pdf(weights, means, variances, X):
@@ -50,7 +49,7 @@ def model_pdf(weights, means, variances, X):
     means = means.astype(np.float32)
     variances = variances.astype(np.float32)
 
-    payload = weights.flatten()[:-1] + means.flatten() + variances.flatten()
+    payload = np.concatenate((np.array([weights[0]]), means.flatten(), variances.flatten()))
 
     for weight, mean, variance in zip(weights, means, variances):
         result += weight * norm(mean, np.sqrt(variance)).pdf(X).flatten()
