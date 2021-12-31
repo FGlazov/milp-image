@@ -18,7 +18,10 @@ def compress_image(path_to_image, output_file = 'out.mipi'):
 def decode_image(path_to_image, output_file = 'out.png'):
     try:
         with open(path_to_image, 'rb') as encoded:
-            pdfs, rANSDecoder = encoder.extract_file_contents(encoded)
+            pdfs, rANSDecoder, rows = encoder.extract_file_contents(encoded)
+        
+        image = encoder.reconstruct_image(pdfs, rANSDecoder, rows)
+        # TODO: Save image to file.
         return True
     except FileNotFoundError:
         return False

@@ -1,6 +1,7 @@
 import rans.rANSCoder as rANS
 import numpy as np
 import distr_model
+import math
 
 def encode_to_file(levels, output_file):
     ransCoder = rANS.Encoder()
@@ -50,14 +51,14 @@ def extract_file_contents(encoded):
     top_lvl = True
 
     pdfs = []
-    while lvl_rows > 1:
+    while lvl_rows > 0:
         lvl_size = lvl_rows * lvl_rows
         payload_size = distr_model.get_pdf_payload_size(lvl_size, top_lvl)
         pdf_payload = encoded.read(payload_size)
         pdf = distr_model.decode_pdf_payload(lvl_size, top_lvl, pdf_payload)
         pdfs.append(pdf)
 
-        lvl_rows /= 2
+        lvl_rows //= 2
         top_lvl = False
  
         print(len(pdf), pdf.sum())
@@ -68,4 +69,37 @@ def extract_file_contents(encoded):
         image_payload.append(int.from_bytes(word, 'big'))
     rANSDecoder = rANS.Decoder(image_payload)
 
-    return pdfs, rANSDecoder
+    return pdfs, rANSDecoder, rows
+
+def reconstruct_image(pdfs, rANSDecoder, rows):
+    nr_square_levels = round(math.log(rows, 2)) + 1
+
+    i = 0
+    lvl_rows = 1
+    image = np.zeros([rows, rows], dtype=np.int16)    
+    
+    # Reverse order here - since rans decoder works in reverse order.
+    while lvl_rows <= rows:
+        j = nr_square_levels - i
+        
+        print("lvl_rows", lvl_rows, "j", j)
+
+        lvl = np.empty([lvl_rows, lvl_rows], dtype=np.int16)
+        
+        offset = distr_model.N # A value in 0-127 means to add -64 to 63 to the pixel.
+        if lvl_rows == rows:
+            offset = 0 # Bottom most level is encoded as 0-255 already, no need to offset.
+
+        pdf = pdfs[-(i+1)]
+        for x in reversed(range(0, lvl_rows)):
+            for y in reversed(range(0, lvl_rows)):
+                lvl[x][y] = rANSDecoder.decode_symbol(pdf) - offset
+
+        for x in range(0, rows):
+            for y in range(0, rows):
+                image[x][y] += lvl[x // (2 ** j) ][y // (2 ** j)]
+
+        lvl_rows *= 2
+        i += 1
+    
+    return image
