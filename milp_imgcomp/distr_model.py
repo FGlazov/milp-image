@@ -12,11 +12,12 @@ from sklearn.mixture import GaussianMixture
 # but it also requires 1KB (for a 0-255 lvl) or 512 Bytes (for a -64 to 63 lvl) of storage. Used for big levels.
 #
 # - The approximate pdf - a mixture of two Gaussians learned by the EM-algorithm.
-# Requires 5 bytes of storage (two means, two variances, one weight (the other weight is 1 - the first weight))
+# Requires 20 bytes of storage (two means, two variances, one weight (the other weight is 1 - the first weight))
 # Gives decent compression of mid-sized levels, while requiring almost no storage in the resulting file.
 #
 # - Uniform pdf - i.e. the uniform distrbution in the range.
 # Requires no storage, and for small lvls provides a better compression than the approximate approach.
+# Indeed for few entries the resulting histograms don't really approximate smooth curves at all.
 
 # TODO: Test this for 128 * 128.
 EXACT_PDF_CUTOFF = 64 * 64 # Use exact pdf for lvls with more elemets than this
@@ -100,8 +101,9 @@ def create_model(lvl, lvl_index):
     
     if lvl.size > EXACT_PDF_CUTOFF:
         square_values = np.array([var.x + n for var in lvl.flatten()], dtype=np.int16)
-        bins = np.bincount(square_values, minlength=n)
-        pdf = bins.astype(np.float32) / lvl.size
+        bins = np.bincount(square_values, minlength=2*n)
+        pdf = bins.astype(np.float64) / lvl.size
+        pdf = pdf.astype(np.float32)
         payload = pdf
     elif lvl.size > APPROX_PDF_CUTOFF:
         pdf, payload = create_approx_pdf(lvl, top_level)

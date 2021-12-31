@@ -29,5 +29,5 @@ def decode_image(path_to_image, output_file = 'out.png'):
 
 ## TODO : Remove testing code.
 
-#print(compress_image("/home/fedor/lena_small.png"))
+#print(compress_image("/home/fedor/lena.png"))
 print(decode_image('/home/fedor/milp-image/out.mipi'))
