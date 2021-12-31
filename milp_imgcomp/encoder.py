@@ -60,9 +60,6 @@ def extract_file_contents(encoded):
 
         lvl_rows //= 2
         top_lvl = False
- 
-        print(len(pdf), pdf.sum())
-
 
     image_payload = []
     while word := encoded.read(4):
@@ -80,10 +77,6 @@ def reconstruct_image(pdfs, rANSDecoder, rows):
     
     # Reverse order here - since rans decoder works in reverse order.
     while lvl_rows <= rows:
-        j = nr_square_levels - i
-        
-        print("lvl_rows", lvl_rows, "j", j)
-
         lvl = np.empty([lvl_rows, lvl_rows], dtype=np.int16)
         
         offset = distr_model.N # A value in 0-127 means to add -64 to 63 to the pixel.
@@ -95,6 +88,7 @@ def reconstruct_image(pdfs, rANSDecoder, rows):
             for y in reversed(range(0, lvl_rows)):
                 lvl[x][y] = rANSDecoder.decode_symbol(pdf) - offset
 
+        j = nr_square_levels - i - 1
         for x in range(0, rows):
             for y in range(0, rows):
                 image[x][y] += lvl[x // (2 ** j) ][y // (2 ** j)]
@@ -102,4 +96,4 @@ def reconstruct_image(pdfs, rANSDecoder, rows):
         lvl_rows *= 2
         i += 1
     
-    return image
+    return image.astype(np.uint8)

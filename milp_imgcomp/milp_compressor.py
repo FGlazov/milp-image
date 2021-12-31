@@ -21,6 +21,9 @@ def decode_image(path_to_image, output_file = 'out.png'):
             pdfs, rANSDecoder, rows = encoder.extract_file_contents(encoded)
         
         image = encoder.reconstruct_image(pdfs, rANSDecoder, rows)
+        print(image)
+        cv2image = cv2.cvtColor(image, cv2.COLOR_GRAY2BGR)
+        cv2.imwrite(output_file, cv2image)
         # TODO: Save image to file.
         return True
     except FileNotFoundError:
