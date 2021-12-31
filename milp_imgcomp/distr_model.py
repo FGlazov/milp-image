@@ -4,6 +4,20 @@ from scipy import stats
 from scipy.stats import norm
 from sklearn.mixture import GaussianMixture
 
+# This file is responsible for creating the models the entropy coder uses.
+# The models vary per level. There are three types of models used, depending on the size of the level.
+# Every model has a differing size of payload and a varying degree of accuracy.
+#
+# - The exact pdf - i.e. the bins of the level. This model provides the highest compression of the level,
+# but it also requires 1KB (for a 0-255 lvl) or 512 Bytes (for a -64 to 63 lvl) of storage. Used for big levels.
+#
+# - The approximate pdf - a mixture of two Gaussians learned by the EM-algorithm.
+# Requires 5 bytes of storage (two means, two variances, one weight (the other weight is 1 - the first weight))
+# Gives decent compression of mid-sized levels, while requiring almost no storage in the resulting file.
+#
+# - Uniform pdf - i.e. the uniform distrbution in the range.
+# Requires no storage, and for small lvls provides a better compression than the approximate approach.
+
 # TODO: Test this for 128 * 128.
 EXACT_PDF_CUTOFF = 64 * 64 # Use exact pdf for lvls with more elemets than this
 APPROX_PDF_CUTOFF = 16 * 16 # Use approx pdf for lvls with more elements than this, and uniform under this.
@@ -18,14 +32,6 @@ EXACT_PDF_TOP_LVL_PAYLOAD_SIZE = 4 * 2 * TOP_LEVEL_N
 # In bytes
 # 5 float32s - one for the 2 weights, 2 for the means, 2 for the variances.
 APPROX_PDF_PAYLOAD_SIZE = 4 * 5
-
-# TODO: Update this
-# Currently the model assumes that the underlying distribution is a mixture of two Gaussians
-# One (ussualy) with a small variance, and another with a large variance, both centered (ussualy close to) 0.
-# This does not capture the underlying distribution that well - perhaps a better distribution would be
-# a mixture of a dirchlet distribution + a Gaussian or a Laplacian?
-# Perhaps one should directly work with discrete distributions instead of discretizing?
-# The current method used is one out of convience, since sklearn is capable of learning a gaussian mixture model.
 
 def create_gm(lvl):    
     gm = GaussianMixture(
