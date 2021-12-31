@@ -4,11 +4,20 @@ from scipy import stats
 from scipy.stats import norm
 from sklearn.mixture import GaussianMixture
 
-# TODO: Test this for 64 * 64.
+# TODO: Test this for 128 * 128.
 EXACT_PDF_CUTOFF = 64 * 64 # Use exact pdf for lvls with more elemets than this
 APPROX_PDF_CUTOFF = 16 * 16 # Use approx pdf for lvls with more elements than this, and uniform under this.
 TOP_LEVEL_N = 128 # Top levels ranges from -128 to 127
 N = 64 # Other levels range from -64 to 63
+
+# In bytes
+# One float32 per value in range(-n, n)
+EXACT_PDF_PAYLOAD_SIZE = 4 * 2 * N
+EXACT_PDF_TOP_LVL_PAYLOAD_SIZE = 4 * 2 * TOP_LEVEL_N
+
+# In bytes
+# 5 float32s - one for the 2 weights, 2 for the means, 2 for the variances.
+APPROX_PDF_PAYLOAD_SIZE = 5 * 4
 
 # TODO: Update this
 # Currently the model assumes that the underlying distribution is a mixture of two Gaussians
@@ -62,6 +71,21 @@ def create_approx_pdf(lvl, top_level):
     gm = create_gm(lvl)
     return discretized_gm_pdf(gm, top_level)
 
+def approx_pdf_from_params(payload, n):
+    X = range(-n, n)
+    weights = []
+
+    weights.append(payload[0])
+    weights.append(1 - payload[0])
+    weights = np.array(weights, dtype=np.float32)
+
+    means = payload[1:3]
+    variances = payload[3:5]
+
+    pdf, _ = model_pdf(weights, means, variances, X)
+
+    return pdf / pdf.sum()
+
 def create_model(lvl, lvl_index):
     top_level = lvl_index == 0
     if top_level:
@@ -81,3 +105,30 @@ def create_model(lvl, lvl_index):
         payload = []        
 
     return pdf, payload
+
+def get_pdf_payload_size(lvl_size, top_level):
+    if lvl_size > EXACT_PDF_CUTOFF:
+        if top_level:
+            return EXACT_PDF_TOP_LVL_PAYLOAD_SIZE
+        else:
+            return EXACT_PDF_PAYLOAD_SIZE
+    elif lvl_size > APPROX_PDF_CUTOFF:
+        return APPROX_PDF_PAYLOAD_SIZE
+    else:
+        return 0
+
+def decode_pdf_payload(lvl_size, top_level, payload):
+    if top_level:
+        n = TOP_LEVEL_N
+    else:
+        n = N
+
+    if lvl_size > EXACT_PDF_CUTOFF:
+        pdf = np.frombuffer(payload, np.float32)
+    elif lvl_size > APPROX_PDF_CUTOFF:
+        pdf_parameters = np.frombuffer(payload, np.float32)
+        pdf = approx_pdf_from_params(pdf_parameters, n)
+    else:
+        pdf = np.array([1.0 / float(2 * n)] * (2 * n), dtype=np.float32) 
+
+    return pdf

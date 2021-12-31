@@ -15,8 +15,19 @@ def compress_image(path_to_image, output_file = 'out.mipi'):
 
     return True
 
+def decode_image(path_to_image, output_file = 'out.png'):
+    try:
+        with open(path_to_image, 'rb') as encoded:
+            pdfs, rANSDecoder = encoder.extract_file_contents(encoded)
+        return True
+    except FileNotFoundError:
+        return False
+
+
+
+# TODO: Write decoder.
 
 ## TODO : Remove testing code.
 
-print(glob.glob("../../*"))
-print(compress_image("/home/fedor/lena.png"))
+#print(compress_image("/home/fedor/lena_small.png"))
+print(decode_image('/home/fedor/milp-image/out.mipi'))
