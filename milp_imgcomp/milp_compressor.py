@@ -1,5 +1,4 @@
 import cv2
-import glob
 
 import encoder
 import milp_model
@@ -26,8 +25,3 @@ def decode_image(path_to_image, output_file = 'out.png'):
         return True
     except FileNotFoundError:
         return False
-
-## TODO : Remove testing code.
-
-#print(compress_image("/home/fedor/lena.png"))
-print(decode_image('/home/fedor/milp-image/out.mipi'))
